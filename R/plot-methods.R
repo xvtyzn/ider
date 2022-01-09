@@ -84,7 +84,8 @@ plot_ortho <- function(polaris, label, num_ortho){
 #' @examples
 plot_gtdbtk <- function(gtdbtk, metadata = NULL, category = NULL,
                         type = c("single", "ani", "pplacer"),
-                        taxonomy = c("domain", "phylum", "class", "order", "family", "genus", "species"), ...){
+                        taxonomy = c("domain", "phylum", "class", "order", "family", "genus", "species"),
+                        colors = colors, ...){
 
   if(is.null(metadata)){
     stop("metadataが指定されていません")
@@ -135,11 +136,11 @@ plot_gtdbtk <- function(gtdbtk, metadata = NULL, category = NULL,
   mod_colors[length(fill_order)] <- "#808080"
 
   # barplotの作成
-  bac_bar <- ggplot(gtdbtk_rate, aes(x = sample, y =percentage,
+  bac_bar <- ggplot(gtdbtk_rate, aes(x = sample, y = percentage,
                                          fill = factor(tax, fill_order))) +
     geom_bar(stat = "identity") + theme_minimal() +
     labs(y = "Relative abundance (%)") +
-    scale_fill_manual(values=rev(mod_colors_bac)) +
+    scale_fill_manual(values=rev(mod_colors), name = taxonomy) +
     theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
     guides(fill = guide_legend(reverse = TRUE)) +
     facet_grid(. ~ category, scales = "free_x")
