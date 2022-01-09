@@ -84,8 +84,7 @@ plot_ortho <- function(polaris, label, num_ortho){
 #' @examples
 plot_gtdbtk <- function(gtdbtk, metadata = NULL, category = NULL,
                         type = c("single", "ani", "pplacer"),
-                        taxonomy = c("domain", "phylum", "class", "order", "family", "genus", "species"),
-                        colors = colors, ...){
+                        taxonomy = c("domain", "phylum", "class", "order", "family", "genus", "species"), ...){
 
   if(is.null(metadata)){
     stop("metadataが指定されていません")
@@ -140,7 +139,7 @@ plot_gtdbtk <- function(gtdbtk, metadata = NULL, category = NULL,
                                          fill = factor(tax, fill_order))) +
     geom_bar(stat = "identity") + theme_minimal() +
     labs(y = "Relative abundance (%)") +
-    scale_fill_manual(values=rev(mod_colors)) +
+    scale_fill_manual(values=rev(mod_colors), name = taxonomy) +
     theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
     guides(fill = guide_legend(reverse = TRUE)) +
     facet_grid(. ~ category, scales = "free_x")
