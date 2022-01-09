@@ -2,11 +2,12 @@
 % Please edit documentation in R/plot-methods.R
 \name{plot_gtdbtk}
 \alias{plot_gtdbtk}
-\title{Title}
+\title{Barplot using gtdbtk data with metadata}
 \usage{
 plot_gtdbtk(
   gtdbtk,
-  metadata,
+  metadata = NULL,
+  category = NULL,
   type = c("single", "ani", "pplacer"),
   taxonomy = c("domain", "phylum", "class", "order", "family", "genus", "species"),
   ...
@@ -16,5 +17,5 @@ plot_gtdbtk(
 
 }
 \description{
-Title
+Barplot using gtdbtk data with metadata
 }
