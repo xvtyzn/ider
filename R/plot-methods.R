@@ -89,10 +89,10 @@ plot_gtdbtk <- function(gtdbtk, metadata = NULL, category = NULL,
   if(is.null(metadata)){
     stop("metadataが指定されていません")
   }
-  if("sample" %in% colnames(metadata)){
+  if(!("sample" %in% colnames(metadata))){
     stop("medataにsample列がありません")
   }
-  if(category %in% colnames(metadata)){
+  if(!(category %in% colnames(metadata))){
     stop("metadataに指定されたカテゴリ列がありません")
   }
 
