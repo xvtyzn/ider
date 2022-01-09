@@ -101,7 +101,7 @@ plot_gtdbtk <- function(gtdbtk, metadata = NULL, category = NULL,
   # metadataとの統合
   # metadataはgenomeがuser_genome列, その他が適当な列名になっていることが条件
   # sample列が必要
-  gtdbtk_meta <- gtdbtk_df %>%
+  gtdbtk_meta <- gtdbtk %>%
     left_join(metadata, by = "user_genome") # x軸用のメタデータの取得
 
   gtdbtk_rate <- gtdbtk_meta %>%
