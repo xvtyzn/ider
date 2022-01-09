@@ -76,45 +76,75 @@ plot_ortho <- function(polaris, label, num_ortho){
 # metadataがある時はmetadataを用いて分ける
 #
 #############################################
-#' Title
+#' Barplot using gtdbtk data with metadata
 #'
 #' @return
 #' @export
 #'
 #' @examples
-plot_gtdbtk <- function(gtdbtk, metadata, type = c("single", "ani", "pplacer"),
-                        taxonomy = c("domain", "phylum",
-                                     "class", "order", "family", "genus",
-                                     "species"), ...){
+plot_gtdbtk <- function(gtdbtk, metadata = NULL, category = NULL,
+                        type = c("single", "ani", "pplacer"),
+                        taxonomy = c("domain", "phylum", "class", "order", "family", "genus", "species"), ...){
 
-  # gtdbtk <- polaris # polarisからgtdbtkの結果を抽出
-  gtdbtk_df <- gtdbtk
-
-  taxonomy <- paste(taxonomy, "gtdb", sep = "_")
-
-  if(!is_null(metadata)){
-    metadata <- polaris # polarisからmetadataを抜く
+  if(is.null(medata)){
+    stop("metadataが指定されていません")
+  }
+  if("sample" %in% colnames(metadata)){
+    stop("medataにsample列がありません")
+  }
+  if(category %in% colnames(metadata)){
+    stop("metadataに指定されたカテゴリ列がありません")
   }
 
+  gtdb_taxonomy <- paste(taxonomy, "gtdb", sep = "_")
+
+  # metadataとの統合
+  # metadataはgenomeがuser_genome列, その他が適当な列名になっていることが条件
+  # sample列が必要
   gtdbtk_meta <- gtdbtk_df %>%
-    left_join(metadata, by = "user_genome") %>% # x軸用のメタデータの取得
+    left_join(metadata, by = "user_genome") # x軸用のメタデータの取得
 
-  gtdbtk_gg <- gtdbtk_meta %>%
-    group_by(sample, !!!taxonomy) %>%
-    summarise(count_genome = n()) %>%
-    arrange(desc(count_genome))
-
-  color_order <- gtdbtk_meta %>%
-    group_by(taxnomy) %>%
+  gtdbtk_bac_rate <- gtdbtk_meta %>%
+    group_by(!!sym(gtdb_taxonomy), !!sym(category), sample) %>%
     summarise(count_genome = n()) %>%
     arrange(desc(count_genome)) %>%
-    select(genus_gtdb) %>% unlist()
+    group_by(sample) %>% # sampleに変更
+    mutate(percentage = count_genome / sum(count_genome) * 100) %>%
+    mutate(tax = !!sym(gtdb_taxonomy),
+           category = !!sym(category)) %>%
+    ungroup() %>%
+    select(tax, category, percentage, count_genome, sample) %>%
+    mutate(tax = case_when(tax == "" ~ "Undetermined",
+                           TRUE ~ tax))
 
-  gtdbtk_gg %>%
-    ggplot(aes(x = sample, y =count_genome, fill = genus_gtdb)) +
+  # 表示する色の指定
+  fill_order_bac <- gtdbtk_meta %>%
+    group_by(!!sym(gtdb_taxonomy)) %>%
+    summarise(count_genome = n()) %>%
+    arrange(desc(count_genome)) %>%
+    mutate(percentage = count_genome / sum(count_genome) * 100) %>%
+    mutate(tax = !!sym(gtdb_taxonomy)) %>%
+    mutate(tax = case_when(tax == "" ~ "Undetermined", TRUE ~ tax)) %>%
+    filter(tax != "Undetermined") %>%
+    arrange(percentage) %>%
+    select(tax) %>%
+    unlist()
+
+  fill_order_bac <- c("Undetermined", fill_order_bac)
+  mod_colors_bac <- colors[1:length(fill_order_bac)]
+  mod_colors_bac[length(fill_order_bac)] <- "#808080"
+
+  # barplotの作成
+  bac_bar <- ggplot(gtdbtk_bac_rate, aes(x = sample, y =percentage,
+                                         fill = factor(tax, fill_order_bac))) +
     geom_bar(stat = "identity") + theme_minimal() +
-    scale_fill_manual(values=colors, limits = color_order)
+    labs(y = "Relative abundance (%)") +
+    scale_fill_manual(values=rev(mod_colors_bac)) +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+    guides(fill = guide_legend(reverse = TRUE)) +
+    facet_grid(. ~ category, scales = "free_x")
 
+  return(bac_bar)
 }
 
 
@@ -131,7 +161,7 @@ plot_gtdbtk <- function(gtdbtk, metadata, type = c("single", "ani", "pplacer"),
 #' @export
 #'
 #' @examples
-plot_checkm <- function(checkm, metadata = NULL, order = NULL, ...){ # いつかinputをpolarisへ直す
+plot_checkm <- function(checkm, metadata = NULL, order = NULL, ...){
 
   quality_gg <- checkm %>%
     ggplot() +
