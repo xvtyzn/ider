@@ -86,7 +86,7 @@ plot_gtdbtk <- function(gtdbtk, metadata = NULL, category = NULL,
                         type = c("single", "ani", "pplacer"),
                         taxonomy = c("domain", "phylum", "class", "order", "family", "genus", "species"), ...){
 
-  if(is.null(medata)){
+  if(is.null(metadata)){
     stop("metadataが指定されていません")
   }
   if("sample" %in% colnames(metadata)){
