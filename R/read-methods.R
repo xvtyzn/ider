@@ -225,6 +225,14 @@ read_ortho <- function(ortho_file){
 #############################################
 #############################################
 
+#' read checkm
+#'
+#' @param file
+#'
+#' @return
+#' @export
+#'
+#' @examples
 read_checkm <- function(file){
 
   # gtdbtkのNAをRのNAへ変換する
