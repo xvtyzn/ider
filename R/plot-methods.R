@@ -104,7 +104,7 @@ plot_gtdbtk <- function(gtdbtk, metadata = NULL, category = NULL,
   gtdbtk_meta <- gtdbtk_df %>%
     left_join(metadata, by = "user_genome") # x軸用のメタデータの取得
 
-  gtdbtk_bac_rate <- gtdbtk_meta %>%
+  gtdbtk_rate <- gtdbtk_meta %>%
     group_by(!!sym(gtdb_taxonomy), !!sym(category), sample) %>%
     summarise(count_genome = n()) %>%
     arrange(desc(count_genome)) %>%
@@ -118,7 +118,7 @@ plot_gtdbtk <- function(gtdbtk, metadata = NULL, category = NULL,
                            TRUE ~ tax))
 
   # 表示する色の指定
-  fill_order_bac <- gtdbtk_meta %>%
+  fill_order <- gtdbtk_meta %>%
     group_by(!!sym(gtdb_taxonomy)) %>%
     summarise(count_genome = n()) %>%
     arrange(desc(count_genome)) %>%
@@ -130,13 +130,13 @@ plot_gtdbtk <- function(gtdbtk, metadata = NULL, category = NULL,
     select(tax) %>%
     unlist()
 
-  fill_order_bac <- c("Undetermined", fill_order_bac)
-  mod_colors_bac <- colors[1:length(fill_order_bac)]
-  mod_colors_bac[length(fill_order_bac)] <- "#808080"
+  fill_order <- c("Undetermined", fill_order)
+  mod_colors <- colors[1:length(fill_order)]
+  mod_colors[length(fill_order)] <- "#808080"
 
   # barplotの作成
-  bac_bar <- ggplot(gtdbtk_bac_rate, aes(x = sample, y =percentage,
-                                         fill = factor(tax, fill_order_bac))) +
+  bac_bar <- ggplot(gtdbtk_rate, aes(x = sample, y =percentage,
+                                         fill = factor(tax, fill_order))) +
     geom_bar(stat = "identity") + theme_minimal() +
     labs(y = "Relative abundance (%)") +
     scale_fill_manual(values=rev(mod_colors_bac)) +
