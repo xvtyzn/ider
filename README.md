@@ -9,7 +9,10 @@
 experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
 <!-- badges: end -->
 
-The goal of ider is to …
+This package is a test version of the polaris package. The polaris
+package provides a set of useful functions for single cell genome
+analysis, and this package is designed to test and investigate some of
+them for inclusion in polaris.
 
 ## Installation
 
