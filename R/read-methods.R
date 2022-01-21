@@ -505,6 +505,31 @@ read_tree <- function(file){
 }
 
 #############################################
+# blastやmmseqs2,diamondの結果を読み込む
+#############################################
+# 毎回読み込ませるのがめんどくさいので
+#############################################
+#' Read blast format 6 file
+#'
+#' @param file
+#' @param format
+#'
+#' @importFrom readr read_tsv
+#' @return
+#' @export
+#'
+#' @examples
+read_blast <- function(file, format = 6){
+  colnames <- c("qseqid", "sseqid", "pident", "length",
+                "mismatch", "gapopen", "qstart", "qend",
+                "sstart", "send", "evalue", "bitscore")
+
+  blast <- read_tsv(file, col_names = colnames)
+
+  return(blast)
+}
+
+#############################################
 # サンプルデータの読み込み
 #############################################
 # サンプルメタデータを読み込ませる
