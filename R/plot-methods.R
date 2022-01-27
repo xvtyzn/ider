@@ -74,7 +74,7 @@ plot_ortho <- function(ortho, tree, num_ortho = 10, delete_genomes = 0){
                shape = 21) +
     labs( x= "Presence of Orthologus", y = "") +
     theme_minimal() +
-    guides(size=FALSE) +
+    guides(size="none") +
     theme(axis.text.x = element_blank(),
           axis.text.y = element_blank())
 
@@ -311,16 +311,29 @@ plot_overview <- function(phylo, gtdb, quality_df, checkm, metadata, legend.size
 #' @return
 #' @export
 #'
+#' @importFrom pheatmap pheatmap
+#' @importFrom purrr is_null
+#'
 #' @examples
-plot_ani <- function(polaris, plot_type = c("heatmap", "distribution"),
-                     subcluster = FALSE, ...){
+plot_ani <- function(ani, genome_list = NULL, annotate_df, plot_type = c("heatmap", "distribution"),
+                     subcluster = FALSE, subcluster_methods = c("hclust_complete", ""), ...){
 
-  ani <- polaris # aniのデータを抽出する
+  if(!is_null(genome_list)){
+    ani <- aai[genome_list,genome_list]
+  }
+
+  hclust_obj <- (100 - ani) %>%
+    dist() %>%
+    hclust(method = "complete")
+
+  order <-  ccsag_se_hclust_obj %>% .$order
+  order2 <- rownames(ani[order,])
 
 
+  ani_heatmap <- pheatmap(ani[order2,order2], show_rownames = F, show_colnames = F,
+                       cluster_rows = F, cluster_cols = F, annotation_col = annotate_df)
 
-  print()
-
+  return(ani_heatmap)
 }
 
 #############################################
