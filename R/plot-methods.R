@@ -4,28 +4,51 @@
 # 系統樹と対応して、orthologの有無の表示
 # いつものやつ。aplotで作成する
 #############################################
-#' Title
+#' Plot Ortyholog and phylogenetic tree
 #'
-#' @param polaris polaris object
+#' Orthofinderとphylogenetic treeをまとめて書く
+#'
+#' @param ortho
+#' @param tree
 #' @param label
 #' @param num_ortho
-#' @param
+#' @param delete_genomes
 #'
 #' @return
 #' @export
 #'
 #' @examples
 #'
-#' @importFrom aplot
+#' @importFrom aplot insert_top
+#' @importFrom aplot insert_left
+#' @importFrom ggplot2 ggplot
+#' @importFrom tibble column_to_rownames
+#' @importFrom dplyr arrange
+#' @importFrom dplyr summarise
+#' @importFrom dplyr group_by
+#' @importFrom dplyr rowid_to_column
+#' @importFrom dplyr ungroup
+#' @importFrom dplyr mutate
+#' @importFrom dplyr unchop
+#' @importFrom dplyr filter
+#' @importFrom tidyr pivot_longer
 #'
-plot_ortho <- function(polaris, label, num_ortho){
+#'
+plot_ortho <- function(ortho, tree, num_ortho = 10, delete_genomes = 0){
 
-  host <- label #メタデータから取得するようにしたいよね
+  #host <- label #メタデータから取得するようにしたいよね
 
-  element <- polaris # polarisのorthogorupsからorthogroups genecountを抽出
+  element <- ortho$ortho_count %>%
+    column_to_rownames("Orthogroup") # polarisのorthogorupsからorthogroups genecountを抽出
   #あるなしに変更
   # できれば、各Orthologの数の分布をしたにだしたいところ
   element[element > 1] <- 1
+
+  if (delete_genomes != 0){
+    genome_num <- ncol(element)
+    element <- element[rowSums(element) != (genome_num - delete_genomes),]
+  }
+
   cols <- colnames(element)
 
   element_filtered <- element %>%
@@ -34,39 +57,49 @@ plot_ortho <- function(polaris, label, num_ortho){
     summarise(freq = n()) %>%
     ungroup() %>%
     rowid_to_column() %>%
-    dplyr::arrange(desc(freq)) %>%
-    dplyr::filter(freq > num_ortho) # ある一定数以上の表示
+    arrange(desc(freq)) %>%
+    filter(freq > num_ortho) # ある一定数以上の表示
 
   gg_element <- element_filtered %>%
     dplyr::mutate(freq2 = as.factor(freq)) %>%
     transform(freq3 = freq * -1) %>%
-    tidyr::pivot_longer(c(-rowid, -freq, -freq2, -freq3, -Total), values_to = "presence") %>%
-    dplyr::mutate(host = rep(host, 43)) # ここをどうにかして、自動化しないと
+    tidyr::pivot_longer(c(-rowid, -freq, -freq2, -freq3), values_to = "presence") %>%
+    dplyr::mutate(host = str_sub(name, start=1, end=6)) %>% #WSK特異的な話 サンプルの最初の1文字目から6文字目をメタデータとして利用
+    unchop(host) #WSK特異的な話
+  #本来であれば、別のベクトルを指定する必要があり
 
-  gg_element %>%
-    ggplot(aes(x = reorder(rowid, freq3), y = name)) +
-    geom_point(aes(size=ifelse(presence==0, NA, presence), fill = host),
+  ortholog_presence <- gg_element %>%
+    ggplot(aes(x = reorder(rowid, freq3), y = name, fill = host)) +
+    geom_point(aes(size=ifelse(presence==0, NA, presence)), #, fill = host),
                shape = 21) +
     labs( x= "Presence of Orthologus", y = "") +
     theme_minimal() +
     guides(size=FALSE) +
     theme(axis.text.x = element_blank(),
-          axis.text.y = element_blank()) -> ortholog_presence
+          axis.text.y = element_blank())
 
-  gg_element %>%
+  # 図の上部の棒グラフを作る
+  ortholog_sum <- gg_element %>%
     dplyr::distinct(rowid,freq2, .keep_all = TRUE) %>%
-    ggplot(aes(x = reorder(rowid, freq3), y = freq)) +
+    ggplot(aes(x = reorder(rowid, freq3), y = freq)) + # rowidでreorderすることで、数が同じものも表示
     geom_bar(stat = "identity") +
     geom_text(aes(label=freq), vjust=0) +
     theme_minimal() +
     labs(x= "") +
     theme(axis.text.x = element_blank(),
-          axis.text.y = element_blank()) -> ortholog_sum
+          axis.text.y = element_blank())
 
+  # 系統樹のラベルを変更
+  tree_tip <- tree$tip.label
+  # ここはWSK特異的な変更
+  tree$tip.label <- str_replace_all(tree_tip, "-", ".") #なぜかread.treeだと-になるので、.へ変換
+  ortholog_tree <- ggtree(tree) + geom_tiplab() + xlim_tree(0.05) # xlimは変更可能にしてもよし
 
   ortho_tree <- ortholog_presence %>%
     insert_top(ortholog_sum, height = .5) %>%
     insert_left(ortholog_tree)
+
+  return(ortho_tree)
 }
 
 #############################################
@@ -105,7 +138,7 @@ plot_gtdbtk <- function(gtdbtk, metadata = NULL, category = NULL,
     left_join(metadata, by = "user_genome") # x軸用のメタデータの取得
 
   gtdbtk_rate <- gtdbtk_meta %>%
-    group_by(!!sym(gtdb_taxonomy), !!sym(category), sample) %>%
+    group_by(!!sym(gtdb_taxonomy), !!sym(category), sample) %>% # categoryやsampleが1種でも問題なし
     summarise(count_genome = n()) %>%
     arrange(desc(count_genome)) %>%
     group_by(sample) %>% # sampleに変更
@@ -142,7 +175,7 @@ plot_gtdbtk <- function(gtdbtk, metadata = NULL, category = NULL,
     scale_fill_manual(values=rev(mod_colors), name = taxonomy) +
     theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
     guides(fill = guide_legend(reverse = TRUE)) +
-    facet_grid(. ~ category, scales = "free_x")
+    facet_grid(. ~ category, scales = "free_x") # categoryが指定されている場合には分けて
 
   return(bac_bar)
 }
