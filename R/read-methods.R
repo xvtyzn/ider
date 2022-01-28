@@ -227,6 +227,8 @@ read_ortho <- function(ortho_file){
 
 #' read checkm
 #'
+#' checkmの結果を読み込む
+#'
 #' @param file
 #'
 #' @return
@@ -305,9 +307,14 @@ read_gtdbtk <- function(file){
 #' @export
 #'
 #' @examples
-read_eggnog <- function(file, name = NULL, extension = ".annotations"){
-  eggnog <- read_tsv(file, skip = 3) %>%
-    rename_all(~str_replace_all(.," ","_"))   # スペースを_へ
+read_eggnog <- function(file, name = NULL, extension = ".annotations", tools = c("eggnog", "atlas")){
+
+  if (tools == "eggnog"){
+    eggnog <- read_tsv(file, skip = 3) %>%
+      rename_all(~str_replace_all(.," ","_"))   # スペースを_へ
+  } else {
+    eggnog <- read_tsv(file)
+  }
 
   if(is_null(name)){
     name <- file %>% str_split("/", simplify = T)
@@ -319,22 +326,40 @@ read_eggnog <- function(file, name = NULL, extension = ".annotations"){
   }
 
   # 各列において、カンマを含む列を文字列からリストへ
-  refined_eggnong <- eggnog %>%
-    mutate(GOs = str_split_list(GOs, pattern = ","),
-           EC = str_split_list(EC, pattern = ","),
-           KEGG_ko = str_split_list(KEGG_ko, pattern = ","),
-           KEGG_Pathway = str_split_list(KEGG_Pathway, pattern = ","),
-           KEGG_Module = str_split_list(KEGG_Module, pattern = ","),
-           KEGG_Reaction = str_split_list(KEGG_Reaction, pattern = ","),
-           KEGG_rclass = str_split_list(KEGG_rclass, pattern = ","),
-           BRITE = str_split_list(BRITE, pattern = ","),
-           KEGG_TC = str_split_list(KEGG_TC, pattern = ","),
-           CAZy = str_split_list(CAZy, pattern = ","),
-           BiGG_Reaction = str_split_list(BiGG_Reaction, pattern = ","),
-           eggNOG_OGs = str_split_list(eggNOG_OGs, pattern = ","),
-           COG_Functional_cat. = str_split_list(COG_Functional_cat., pattern = "")
-    ) %>%
-    mutate(genome = genome_names)
+  if (tools == "eggnog"){
+    refined_eggnong <- eggnog %>%
+      mutate(GOs = str_split_list(GOs, pattern = ","),
+             EC = str_split_list(EC, pattern = ","),
+             KEGG_ko = str_split_list(KEGG_ko, pattern = ","),
+             KEGG_Pathway = str_split_list(KEGG_Pathway, pattern = ","),
+             KEGG_Module = str_split_list(KEGG_Module, pattern = ","),
+             KEGG_Reaction = str_split_list(KEGG_Reaction, pattern = ","),
+             KEGG_rclass = str_split_list(KEGG_rclass, pattern = ","),
+             BRITE = str_split_list(BRITE, pattern = ","),
+             KEGG_TC = str_split_list(KEGG_TC, pattern = ","),
+             CAZy = str_split_list(CAZy, pattern = ","),
+             BiGG_Reaction = str_split_list(BiGG_Reaction, pattern = ","),
+             eggNOG_OGs = str_split_list(eggNOG_OGs, pattern = ","),
+             COG_Functional_cat. = str_split_list(COG_Functional_cat., pattern = "")) %>%
+      mutate(genome = genome_names)
+  } else {
+    refined_eggnong <- eggnog %>%
+      mutate(GO_terms = str_split_list(GO_terms, pattern = ","),
+             Eggnog = str_split_list(eggNOG, pattern = ","),
+             COG_cat = str_split_list(COG_cat, pattern = ","),
+             EC = str_split_list(EC, pattern = ","),
+             KO = str_split_list(KO, pattern = ","),
+             KEGG_Pathway = str_split_list(KEGG_Pathway, pattern = ","),
+             KEGG_Module = str_split_list(KEGG_Module, pattern = ","),
+             KEGG_Reaction = str_split_list(KEGG_Reaction, pattern = ","),
+             KEGG_rclass = str_split_list(KEGG_rclass, pattern = ","),
+             BRITE = str_split_list(BRITE, pattern = ","),
+             KEGG_TC = str_split_list(KEGG_TC, pattern = ","),
+             CAZy = str_split_list(CAZy, pattern = ","),
+             BiGG_Reaction = str_split_list(BiGG_Reaction, pattern = ","),
+             PFAMs = str_split_list(PFAMs, pattern = ",")) %>%
+      mutate(genome = genome_names)
+  }
   #
   return(refined_eggnong)
 }
@@ -471,7 +496,9 @@ read_interpros <- function(files, dir = FALSE, type = c("tsv", "json", "xml"),
   return(interpro_data)
 }
 
-read_ani <- function(file, extension = "fna"){
+read_ani <- function(file, extension = "fna", program = c("fastani", "enveomics")){
+
+  ani_colnames <- c("query", "target", "ANI", "tmp1", "tmp2")
 
   ani <- file %>%
     read_tsv() %>%
