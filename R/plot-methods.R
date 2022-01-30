@@ -10,6 +10,7 @@
 #'
 #' @param ortho
 #' @param tree
+#' @param metadata
 #' @param label
 #' @param num_ortho
 #' @param delete_genomes
@@ -34,9 +35,11 @@
 #' @importFrom tidyr pivot_longer
 #'
 #'
-plot_ortho <- function(ortho, tree, num_ortho = 10, delete_genomes = 0){
+plot_ortho <- function(ortho, tree, metadata, num_ortho = 10, delete_genomes = 0,
+                       tip_lab = T){
 
   #host <- label #メタデータから取得するようにしたいよね
+  # 後の課題
 
   element <- ortho$ortho_count %>%
     column_to_rownames("Orthogroup") # polarisのorthogorupsからorthogroups genecountを抽出
@@ -44,6 +47,7 @@ plot_ortho <- function(ortho, tree, num_ortho = 10, delete_genomes = 0){
   # できれば、各Orthologの数の分布をしたにだしたいところ
   element[element > 1] <- 1
 
+  # ゲノムの欠損による可視化ができない場合には、穴抜けになっている遺伝子を削除
   if (delete_genomes != 0){
     genome_num <- ncol(element)
     element <- element[rowSums(element) != (genome_num - delete_genomes),]
@@ -51,6 +55,7 @@ plot_ortho <- function(ortho, tree, num_ortho = 10, delete_genomes = 0){
 
   cols <- colnames(element)
 
+  # Orthogroupsの有無によって、グルーピングを行っている
   element_filtered <- element %>%
     rownames_to_column("OG") %>%
     group_by(across(all_of(cols))) %>%
@@ -64,12 +69,14 @@ plot_ortho <- function(ortho, tree, num_ortho = 10, delete_genomes = 0){
     dplyr::mutate(freq2 = as.factor(freq)) %>%
     transform(freq3 = freq * -1) %>%
     tidyr::pivot_longer(c(-rowid, -freq, -freq2, -freq3), values_to = "presence") %>%
-    dplyr::mutate(host = str_sub(name, start=1, end=6)) %>% #WSK特異的な話 サンプルの最初の1文字目から6文字目をメタデータとして利用
-    unchop(host) #WSK特異的な話
+    full_join(metadata, by = c("name" = "genome")) # メタデータ対応、hostが色付けのまま
+
+    #dplyr::mutate(host = str_sub(name, start=1, end=6)) %>% #WSK特異的な話 サンプルの最初の1文字目から6文字目をメタデータとして利用
+    #unchop(host) #WSK特異的な話
   #本来であれば、別のベクトルを指定する必要があり
 
   ortholog_presence <- gg_element %>%
-    ggplot(aes(x = reorder(rowid, freq3), y = name, fill = host)) +
+    ggplot(aes(x = reorder(rowid, freq3), y = name, fill = host)) + # ここがhostになっている
     geom_point(aes(size=ifelse(presence==0, NA, presence)), #, fill = host),
                shape = 21) +
     labs( x= "Presence of Orthologus", y = "") +
@@ -90,16 +97,26 @@ plot_ortho <- function(ortho, tree, num_ortho = 10, delete_genomes = 0){
           axis.text.y = element_blank())
 
   # 系統樹のラベルを変更
+  # これが一般的なエラーなのかを探る必要がある
   tree_tip <- tree$tip.label
   # ここはWSK特異的な変更
   tree$tip.label <- str_replace_all(tree_tip, "-", ".") #なぜかread.treeだと-になるので、.へ変換
-  ortholog_tree <- ggtree(tree) + geom_tiplab() + xlim_tree(0.05) # xlimは変更可能にしてもよし
+  ortholog_tree <- ggtree(tree) + geom_treescale(x=0.05, y=0, offset=2, fontsize = 3) + xlim_tree(0.05)
+
+  if (isTRUE(tip_lab)){
+    ortholog_tree <- ortholog_tree + geom_tiplab()
+  }
 
   ortho_tree <- ortholog_presence %>%
     insert_top(ortholog_sum, height = .5) %>%
     insert_left(ortholog_tree)
 
   return(ortho_tree)
+}
+
+filter_except_zero <- function(dat, ids){
+  dat %>%
+    filter_at(vars(-!!ids), all_vars(. == 0))
 }
 
 #############################################
@@ -215,21 +232,23 @@ plot_checkm <- function(checkm, metadata = NULL, order = NULL, ...){
 # ggtreeExtraを使った可視化をする
 #############################################
 
-plot_qcphylo <- function(polaris, layout = "fan",
-                         legend.size = 0.8,
-                         open.angle = 10,
-                         fill.element = NULL,
-                         bar.element = NULL,
-                         phylo_color = NULL,
-                         bar_color = NULL,
-                         metadata_column = NULL){
+#' Title
+#'
+#' @param phylo
+#' @param gtdb
+#' @param quality_df
+#' @param checkm
+#' @param metadata
+#' @param legend.size
+#'
+#' @return
+#' @export
+#'
+#' @examples
+plot_phylo <- function(phylo, gtdb, checkm, metadata, legend.size = 0.8){
 
-
-
-}
-
-# 以下のはdraft versionこれを上記の形に変えていく
-plot_overview <- function(phylo, gtdb, quality_df, checkm, metadata, legend.size = 0.8){
+  # ggtree objectの作成
+  # 基本設定は円形
   m_p <- ggtree(phylo, layout="fan", branch.length = "none",
                 size=0.4, open.angle=10, aes(color=group)) +
     scale_color_manual(values=colors,
@@ -237,6 +256,7 @@ plot_overview <- function(phylo, gtdb, quality_df, checkm, metadata, legend.size
                                           keyheight = legend.size, order=4)) +
     new_scale_color()
 
+  # gtdbtkのannotationを付与
   m_p1 <- m_p %<+%
     gtdb + geom_fruit(data=metadata, geom=geom_tile,
                       mapping=aes(y=user_genome,
@@ -315,8 +335,10 @@ plot_overview <- function(phylo, gtdb, quality_df, checkm, metadata, legend.size
 #' @importFrom purrr is_null
 #'
 #' @examples
-plot_ani <- function(ani, genome_list = NULL, annotate_df, plot_type = c("heatmap", "distribution"),
-                     subcluster = FALSE, subcluster_methods = c("hclust_complete", ""), ...){
+plot_ani <- function(ani, genome_list = NULL, summary_df = NULL,
+                     completeness = 50, contamination = 10,
+                     annotate_df, subcluster = FALSE,
+                     subcluster_methods = c("hclust_complete", ""), ...){
 
   if(!is_null(genome_list)){
     ani <- aai[genome_list,genome_list]
