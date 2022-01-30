@@ -39,8 +39,6 @@ extract_ortho <- function(ortho, freq = NULL, genome_list = NULL, delete_genomes
     element <- element[rowSums(element) != (genome_num - delete_genomes),]
   }
 
-  cols <- colnames(element)
-
   # freqで選択するか genome_listで選択するかの判断が必要
   if(is_null(freq) & is_null(genome_list)){
     stop("freqかgenome_listに値を入れてください")
