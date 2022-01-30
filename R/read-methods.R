@@ -325,42 +325,24 @@ read_eggnog <- function(file, name = NULL, extension = ".annotations", tools = c
     genome_names <- name
   }
 
+  eggnog_splited_ids <- c("GOs", "EC", "KEGG_ko", "KEGG_Pathway", "KEGG_Module",
+                   "KEGG_Reaction", "KEGG_rclass", "BRITE", "KEGG_TC", "CAZy",
+                   "BiGG_Reaction", "eggNOG_OGs", "COG_Functional_cat.")
+  atlas_splited_ids <- c("GO_terms", "EC", "KO", "KEGG_Pathway", "KEGG_Module",
+                         "KEGG_Reaction", "KEGG_rclass", "BRITE", "KEGG_TC", "CAZy",
+                         "BiGG_Reaction", "Eggnog", "COG_cat", "PFAMs")
   # 各列において、カンマを含む列を文字列からリストへ
+  # acrossで書き換える
   if (tools == "eggnog"){
     refined_eggnong <- eggnog %>%
-      mutate(GOs = str_split_list(GOs, pattern = ","),
-             EC = str_split_list(EC, pattern = ","),
-             KEGG_ko = str_split_list(KEGG_ko, pattern = ","),
-             KEGG_Pathway = str_split_list(KEGG_Pathway, pattern = ","),
-             KEGG_Module = str_split_list(KEGG_Module, pattern = ","),
-             KEGG_Reaction = str_split_list(KEGG_Reaction, pattern = ","),
-             KEGG_rclass = str_split_list(KEGG_rclass, pattern = ","),
-             BRITE = str_split_list(BRITE, pattern = ","),
-             KEGG_TC = str_split_list(KEGG_TC, pattern = ","),
-             CAZy = str_split_list(CAZy, pattern = ","),
-             BiGG_Reaction = str_split_list(BiGG_Reaction, pattern = ","),
-             eggNOG_OGs = str_split_list(eggNOG_OGs, pattern = ","),
-             COG_Functional_cat. = str_split_list(COG_Functional_cat., pattern = "")) %>%
+      mutate(across(eggnog_splited_ids, str_split_list)) %>% # acrossを活用
       mutate(genome = genome_names)
   } else {
     refined_eggnong <- eggnog %>%
-      mutate(GO_terms = str_split_list(GO_terms, pattern = ","),
-             Eggnog = str_split_list(eggNOG, pattern = ","),
-             COG_cat = str_split_list(COG_cat, pattern = ","),
-             EC = str_split_list(EC, pattern = ","),
-             KO = str_split_list(KO, pattern = ","),
-             KEGG_Pathway = str_split_list(KEGG_Pathway, pattern = ","),
-             KEGG_Module = str_split_list(KEGG_Module, pattern = ","),
-             KEGG_Reaction = str_split_list(KEGG_Reaction, pattern = ","),
-             KEGG_rclass = str_split_list(KEGG_rclass, pattern = ","),
-             BRITE = str_split_list(BRITE, pattern = ","),
-             KEGG_TC = str_split_list(KEGG_TC, pattern = ","),
-             CAZy = str_split_list(CAZy, pattern = ","),
-             BiGG_Reaction = str_split_list(BiGG_Reaction, pattern = ","),
-             PFAMs = str_split_list(PFAMs, pattern = ",")) %>%
+      mutate(across(atlas_splited_ids, str_split_list)) %>% # acrossを活用
       mutate(genome = genome_names)
   }
-  #
+
   return(refined_eggnong)
 }
 
