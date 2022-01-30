@@ -50,7 +50,7 @@ extract_ortho <- function(ortho, freq = NULL, genome_list = NULL, delete_genomes
 
   if(!is_null(genome_list)){
     ortho_list <- element %>%
-      filter_except_zero(element, genome_list) %>%
+      filter_except_zero(genome_list) %>%
       rownames_to_column("OG") %>%
       select(OG)  %>%
       unlist()
