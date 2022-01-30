@@ -15,6 +15,16 @@
 #' @export
 #'
 #' @examples
+#'
+#' @importFrom purrr is_null
+#' @importFrom tibble rownames_to_column
+#' @importFrom dplyr group_by
+#' @importFrom dplyr mutate
+#' @importFrom dplyr filter
+#' @importFrom dplyr ungroup
+#' @importFrom dplyr select
+#' @importFrom tidyr nest
+#'
 extract_ortho <- function(ortho, freq = NULL, genome_list = NULL){
 
   element <- ortho$ortho_count %>%
@@ -73,7 +83,7 @@ filter_except_zero <- function(dat, ids){
 #############################################
 # ortholog解析の結果からOrtholog多い順にゲノムリストを取得
 #############################################
-#
+# orthlogリストからゲノムのリストを取得する
 #
 #
 #############################################
@@ -86,6 +96,22 @@ filter_except_zero <- function(dat, ids){
 #' @export
 #'
 #' @examples
+#'
+#' @importFrom purrr is_null
+#' @importFrom tibble rownames_to_column
+#' @importFrom dplyr group_by
+#' @importFrom dplyr mutate
+#' @importFrom dplyr filter
+#' @importFrom dplyr ungroup
+#' @importFrom dplyr select
+#' @importFrom dplyr across
+#' @importFrom dplyr all_of
+#' @importFrom dplyr summarise
+#' @importFrom dplyr arrange
+#' @importFrom tidyr pivot_longer
+#' @importFrom tidyr nest
+#' @importFrom
+#'
 extract_genomelist <- function(ortho, delete_genomes = 0){
 
   element <- ortho$ortho_count %>%
@@ -113,9 +139,9 @@ extract_genomelist <- function(ortho, delete_genomes = 0){
     filter(freq > num_ortho) # ある一定数以上の表示
 
   gg_element <- element_filtered %>%
-    dplyr::mutate(freq2 = as.factor(freq)) %>%
+    mutate(freq2 = as.factor(freq)) %>%
     transform(freq3 = freq * -1) %>%
-    tidyr::pivot_longer(c(-rowid, -freq, -freq2, -freq3), values_to = "presence")
+    pivot_longer(c(-rowid, -freq, -freq2, -freq3), values_to = "presence")
 
   gg_element2 <- gg_element %>%
     group_by(rowid) %>%
