@@ -10,6 +10,7 @@
 #' @param ortho
 #' @param freq
 #' @param genome_list
+#' @param delete_genomes
 #'
 #' @return
 #' @export
@@ -25,7 +26,7 @@
 #' @importFrom dplyr select
 #' @importFrom tidyr nest
 #'
-extract_ortho <- function(ortho, freq = NULL, genome_list = NULL){
+extract_ortho <- function(ortho, freq = NULL, genome_list = NULL, delete_genomes = 0){
 
   element <- ortho$ortho_count %>%
     column_to_rownames("Orthogroup") # polarisのorthogorupsからorthogroups genecountを抽出
