@@ -373,7 +373,7 @@ str_split_list <- function(cols, pattern = ","){
 #' @examples
 #'
 #'
-read_eggnogs <- function(eggnog, dir = FALSE, extension = "annotations", names = NULL){
+read_eggnogs <- function(eggnog, dir = FALSE, extension = "annotations", names = NULL, tools = c("eggnog", "atlas")){
 
   # ディレクトリか否か
   if (isTRUE(dir)){
@@ -384,7 +384,7 @@ read_eggnogs <- function(eggnog, dir = FALSE, extension = "annotations", names =
   }
 
   eggnog_list <- eggnog_files %>%
-    map(read_eggnog, name = names, extension = extension) %>%
+    map(read_eggnog, name = names, extension = extension, tools = tools) %>%
     bind_rows()
 
   return(eggnog_list)
