@@ -310,7 +310,7 @@ read_gtdbtk <- function(file){
 read_eggnog <- function(file, name = NULL, extension = ".annotations", tools = c("eggnog", "atlas")){
 
   if (tools == "eggnog"){
-    eggnog <- read_tsv(file, skip = 3) %>%
+    eggnog <- read_tsv(file, skip = 4) %>%
       rename_all(~str_replace_all(.," ","_"))   # スペースを_へ
   } else {
     eggnog <- read_tsv(file)
