@@ -327,7 +327,7 @@ read_eggnog <- function(file, name = NULL, extension = ".annotations", tools = c
 
   eggnog_splited_ids <- c("GOs", "EC", "KEGG_ko", "KEGG_Pathway", "KEGG_Module",
                    "KEGG_Reaction", "KEGG_rclass", "BRITE", "KEGG_TC", "CAZy",
-                   "BiGG_Reaction", "eggNOG_OGs", "COG_Functional_cat.")
+                   "BiGG_Reaction", "eggNOG_OGs", "PFAMs", "COG_category")
   atlas_splited_ids <- c("GO_terms", "EC", "KO", "KEGG_Pathway", "KEGG_Module",
                          "KEGG_Reaction", "KEGG_rclass", "BRITE", "KEGG_TC", "CAZy",
                          "BiGG_Reaction", "Eggnog", "COG_cat", "PFAMs")
