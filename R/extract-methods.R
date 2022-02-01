@@ -74,6 +74,15 @@ extract_ortho <- function(ortho, freq = NULL, genome_list = NULL, delete_genomes
 # filter_atは非推奨になってしまったので、使わない
 # outputしない
 #############################################
+#' Title
+#'
+#' @param dat
+#' @param ids
+#'
+#' @return
+#' @export
+#'
+#' @examples
 filter_except_zero <- function(dat, ids){
   expected_dat <- filter(dat, if_all(!ids, ~ .x == 0) & if_all(ids, ~ .x != 0))
   return(expected_dat)
