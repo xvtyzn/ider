@@ -70,6 +70,7 @@ plot_ortho <- function(ortho, tree, metadata, num_ortho = 10, delete_genomes = 0
     transform(freq3 = freq * -1) %>%
     tidyr::pivot_longer(c(-rowid, -freq, -freq2, -freq3), values_to = "presence") %>%
     full_join(metadata, by = c("name" = "genome")) # メタデータ対応、hostが色付けのまま
+    # 上記については、なぜか-が.に変換されていることがあるので、注意すること
 
     #dplyr::mutate(host = str_sub(name, start=1, end=6)) %>% #WSK特異的な話 サンプルの最初の1文字目から6文字目をメタデータとして利用
     #unchop(host) #WSK特異的な話
