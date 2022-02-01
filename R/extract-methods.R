@@ -83,8 +83,14 @@ extract_ortho <- function(ortho, freq = NULL, genome_list = NULL, delete_genomes
 #' @export
 #'
 #' @examples
-filter_except_zero <- function(dat, ids){
+#'
+#' @importFrom dplyr filter
+#' @importFrom dplyr if_all
+#'
+filter_except_zero <- function(dat, ids){ #なぜこれがupdateされないのか
+
   expected_dat <- filter(dat, if_all(!ids, ~ .x == 0) & if_all(ids, ~ .x != 0))
+
   return(expected_dat)
 }
 
