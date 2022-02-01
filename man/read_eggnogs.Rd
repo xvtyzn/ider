@@ -4,7 +4,13 @@
 \alias{read_eggnogs}
 \title{Eggnogデータのまとめて読み込み}
 \usage{
-read_eggnogs(eggnog, dir = FALSE, extension = "annotations", names = NULL)
+read_eggnogs(
+  eggnog,
+  dir = FALSE,
+  extension = "annotations",
+  names = NULL,
+  tools = c("eggnog", "atlas")
+)
 }
 \arguments{
 \item{dir}{}

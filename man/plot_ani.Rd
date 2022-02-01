@@ -5,9 +5,14 @@
 \title{Title}
 \usage{
 plot_ani(
-  polaris,
-  plot_type = c("heatmap", "distribution"),
+  ani,
+  genome_list = NULL,
+  summary_df = NULL,
+  completeness = 50,
+  contamination = 10,
+  annotate_df,
   subcluster = FALSE,
+  subcluster_methods = c("hclust_complete", ""),
   ...
 )
 }

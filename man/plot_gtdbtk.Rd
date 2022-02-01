@@ -10,7 +10,6 @@ plot_gtdbtk(
   category = NULL,
   type = c("single", "ani", "pplacer"),
   taxonomy = c("domain", "phylum", "class", "order", "family", "genus", "species"),
-  colors = colors,
   ...
 )
 }

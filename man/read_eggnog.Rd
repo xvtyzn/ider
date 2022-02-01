@@ -4,7 +4,12 @@
 \alias{read_eggnog}
 \title{Eggnong annotationの読み込み}
 \usage{
-read_eggnog(file, name = NULL, extension = ".annotations")
+read_eggnog(
+  file,
+  name = NULL,
+  extension = ".annotations",
+  tools = c("eggnog", "atlas")
+)
 }
 \arguments{
 \item{file}{eggnongの結果、eggnog annotation}

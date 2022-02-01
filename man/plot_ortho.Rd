@@ -2,18 +2,25 @@
 % Please edit documentation in R/plot-methods.R
 \name{plot_ortho}
 \alias{plot_ortho}
-\title{Title}
+\title{Plot Ortyholog and phylogenetic tree}
 \usage{
-plot_ortho(polaris, label, num_ortho)
+plot_ortho(
+  ortho,
+  tree,
+  metadata,
+  num_ortho = 10,
+  delete_genomes = 0,
+  tip_lab = T
+)
 }
 \arguments{
-\item{polaris}{polaris object}
+\item{delete_genomes}{}
 }
 \value{
 
 }
 \description{
-Title
+Orthofinderとphylogenetic treeをまとめて書く
 }
 \examples{
 
