@@ -111,7 +111,7 @@ filter_except_zero <- function(dat, ids){
 #' @importFrom tidyr nest
 #' @importFrom
 #'
-extract_genomelist <- function(ortho, delete_genomes = 0){
+extract_genomelist <- function(ortho, delete_genomes = 0, num_ortho = 10){
 
   element <- ortho$ortho_count %>%
     column_to_rownames("Orthogroup") # polarisのorthogorupsからorthogroups genecountを抽出
