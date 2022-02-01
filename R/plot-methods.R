@@ -115,11 +115,6 @@ plot_ortho <- function(ortho, tree, metadata, num_ortho = 10, delete_genomes = 0
   return(ortho_tree)
 }
 
-filter_except_zero <- function(dat, ids){
-  dat %>%
-    filter_at(vars(-!!ids), all_vars(. == 0))
-}
-
 #############################################
 # 取れたゲノムの系統組成を示す
 #############################################
