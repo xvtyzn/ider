@@ -3,6 +3,7 @@
 #############################################
 # 系統樹と対応して、orthologの有無の表示
 # いつものやつ。aplotで作成する
+# 4番目にはplasmidと判定された
 #############################################
 #' Plot Ortyholog and phylogenetic tree
 #'
@@ -11,6 +12,7 @@
 #' @param ortho
 #' @param tree
 #' @param metadata
+#' @param plas_ortho plasmidとされるorthologのリスト (3列)
 #' @param label
 #' @param num_ortho
 #' @param delete_genomes
@@ -35,11 +37,8 @@
 #' @importFrom tidyr pivot_longer
 #'
 #'
-plot_ortho <- function(ortho, tree, metadata, num_ortho = 10, delete_genomes = 0,
+plot_ortho <- function(ortho, tree, metadata, plas_ortho = NULL, num_ortho = 10, delete_genomes = 0,
                        tip_lab = T){
-
-  #host <- label #メタデータから取得するようにしたいよね
-  # 後の課題
 
   element <- ortho$ortho_count %>%
     column_to_rownames("Orthogroup") # polarisのorthogorupsからorthogroups genecountを抽出
@@ -56,12 +55,14 @@ plot_ortho <- function(ortho, tree, metadata, num_ortho = 10, delete_genomes = 0
   cols <- colnames(element)
 
   # Orthogroupsの有無によって、グルーピングを行っている
-  element_filtered <- element %>%
+  element_data <- element %>%
     rownames_to_column("OG") %>%
     group_by(across(all_of(cols))) %>%
     summarise(freq = n()) %>%
     ungroup() %>%
-    rowid_to_column() %>%
+    rowid_to_column()
+
+  element_filtered <- element_data %>%
     arrange(desc(freq)) %>%
     filter(freq > num_ortho) # ある一定数以上の表示
 
@@ -72,9 +73,59 @@ plot_ortho <- function(ortho, tree, metadata, num_ortho = 10, delete_genomes = 0
     full_join(metadata, by = c("name" = "genome")) # メタデータ対応、hostが色付けのまま
     # 上記については、なぜか-が.に変換されていることがあるので、注意すること
 
-    #dplyr::mutate(host = str_sub(name, start=1, end=6)) %>% #WSK特異的な話 サンプルの最初の1文字目から6文字目をメタデータとして利用
-    #unchop(host) #WSK特異的な話
-  #本来であれば、別のベクトルを指定する必要があり
+  if (!is_null(plas_ortho)){ #もしplasmid特有とされるOrthologを指定した場合にplasmidとchromosomeに載っている遺伝子を棒グラフで分けて表示する
+    rowid_OG <- element %>%
+      rownames_to_column("OG") %>%
+      group_by(across(all_of(cols))) %>%
+      nest() %>%
+      summarise(freq = n(), data = data) %>%
+      ungroup() %>%
+      rowid_to_column() %>%
+      select(rowid, data, freq) %>%
+      unnest() %>%
+      group_by(rowid) %>%
+      mutate(freq = n()) %>%
+      ungroup() %>%
+      dplyr::filter(freq > num_ortho)
+
+    plasmid_freq <- rowid_OG %>%
+      filter(OG %in% unique(plas_ortho$Orthogroup)) %>%
+      group_by(rowid, freq) %>%
+      summarise(n = n())
+
+    # chromosomeデータの生成
+    gg_sum_data <- gg_element %>%
+      dplyr::distinct(rowid, freq2, .keep_all = TRUE) %>%
+      select(rowid, freq, freq2, freq3) %>%
+      mutate(type = "Chromosome")
+
+    # plasmidデータの生成
+    gg_sum_plasmid <- tibble(rowid = plasmid_freq$rowid,
+                             freq = plasmid_freq$n,
+                             freq3 = -plasmid_freq$freq,
+                             freq2 = as_factor(plasmid_freq$freq)) %>%
+      mutate(type = "Plasmid")
+
+    # このあたりすごく汚いので、書き直しが必要
+    gg_sum_data2 <- gg_sum_data %>%
+      full_join(gg_sum_plasmid, by = c("rowid" = "rowid")) %>%
+      mutate(freq.z =  case_when(!is.na(freq.y) ~ freq.x - freq.y,
+                                 is.na(freq.y) ~ freq.x)) %>%
+      select(rowid, freq2.x, freq3.x, type.x, freq.z) %>%
+      rename(freq2 = freq2.x, freq3 = freq3.x, type = type.x, freq = freq.z)
+
+    # plasmidとchromosomeのbarplotはここで作ってしまう
+    ortholog_sum <- gg_sum_data2 %>%
+      bind_rows(gg_sum_plasmid) %>%
+      ggplot(aes(x = reorder(rowid, freq3), y = freq, fill = type)) +
+      geom_bar(stat = "identity") +
+      geom_text(aes(label=ifelse(freq != 0, freq, '')), vjust=0) +
+      theme_minimal() +
+      labs(x= "", y = "The number of Orthogrups") +
+      theme(axis.text.x = element_blank(),
+            axis.text.y = element_blank())
+
+  }
 
   ortholog_presence <- gg_element %>%
     ggplot(aes(x = reorder(rowid, freq3), y = name, fill = host)) + # ここがhostになっている
@@ -87,15 +138,17 @@ plot_ortho <- function(ortho, tree, metadata, num_ortho = 10, delete_genomes = 0
           axis.text.y = element_blank())
 
   # 図の上部の棒グラフを作る
-  ortholog_sum <- gg_element %>%
-    dplyr::distinct(rowid,freq2, .keep_all = TRUE) %>%
-    ggplot(aes(x = reorder(rowid, freq3), y = freq)) + # rowidでreorderすることで、数が同じものも表示
-    geom_bar(stat = "identity") +
-    geom_text(aes(label=freq), vjust=0) +
-    theme_minimal() +
-    labs(x= "") +
-    theme(axis.text.x = element_blank(),
-          axis.text.y = element_blank())
+  if (is_null(plas_ortho)){ #plasmidの指定を行った時はすでにあるので作らない
+    ortholog_sum <- gg_element %>%
+      dplyr::distinct(rowid,freq2, .keep_all = TRUE) %>%
+      ggplot(aes(x = reorder(rowid, freq3), y = freq)) + # rowidでreorderすることで、数が同じものも表示
+      geom_bar(stat = "identity") +
+      geom_text(aes(label=freq), vjust=0) +
+      theme_minimal() +
+      labs(x= "") +
+      theme(axis.text.x = element_blank(),
+            axis.text.y = element_blank())
+  }
 
   # 系統樹のラベルを変更
   # これが一般的なエラーなのかを探る必要がある
