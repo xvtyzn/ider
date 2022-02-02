@@ -166,3 +166,76 @@ extract_genomelist <- function(ortho, delete_genomes = 0, num_ortho = 10){
 
   return(gg_element2)
 }
+
+#############################################
+# ortholog解析の結果から特定の分布を示すortholog IDを取得する
+#############################################
+# ゲノムリストやfrequencyを指定することで、それらのゲノムが
+# 特異的に持つOrthogroupsを抽出する
+#
+#############################################
+#' Title
+#'
+#' @param tmp
+#' @param ortho_data
+#' @param delete_genomes
+#'
+#' @return
+#' @export
+#'
+#' @examples
+extract_ortho2 <- function(tmp, ortho_data, delete_genomes = 0){
+  tmp2 <- str_replace(tmp, "\\.", "-")
+  aaa <- extract_ortho(ortho_data,
+                       genome_list = tmp2,
+                       delete_genomes = delete_genomes)
+  return(aaa)
+}
+
+#############################################
+# ortholog解析の結果から特定の分布を示すortholog IDを取得する
+#############################################
+# ゲノムリストやfrequencyを指定することで、それらのゲノムが
+# 特異的に持つOrthogroupsを抽出する
+#
+#############################################
+# Orthologから遺伝子のみを抽出
+#' Title
+#'
+#' @param data
+#' @param ortho_data
+#'
+#' @return
+#' @export
+#'
+#' @examples
+extract_gene <- function(data, ortho_data){
+  ortho_genes <- ortho_data$ortho_genes %>%
+    filter(Orthogroup %in% data) %>%
+    select(value) %>%
+    arrange(desc(value))
+  return(ortho_genes)
+}
+
+#############################################
+# 遺伝子名でeggnogを抽出し、指定したカテゴリのデータをunchopした状態にする
+#############################################
+# 遺伝子名のベクトルを得た後に、その遺伝子名で
+# eggnongデータからアノテーションを取得する
+#############################################
+#' Title
+#'
+#' @param data
+#' @param category
+#' @param eggnog_data
+#'
+#' @return
+#' @export
+#'
+#' @examples
+extract_eggnog <- function(data, category, eggnog_data){
+  eggnog_annot <- eggnog_data %>%
+    filter(`#query` %in% data) %>%
+    unchop(category)
+  return(eggnog_annot)
+}
