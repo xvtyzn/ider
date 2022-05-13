@@ -268,7 +268,7 @@ plot_checkm <- function(checkm, metadata = NULL, order = NULL, ...){
     geom_point(aes(x = Bin_Id, y = Contamination, colour= "Contamination")) +
     theme_minimal() +
     scale_colour_manual(values = c("red", "blue")) +
-    scale_y_continuous(sec.axis = sec_axis(~.*5, name = "Contamination [%]")) +
+    scale_y_continuous(sec.axis = sec_axis(~., name = "Contamination [%]")) +
     labs(y = "Completeness [%]", x = "The number of SAGs", color = "type")
 
 
